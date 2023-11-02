@@ -40,13 +40,13 @@ Resources:
       VpcId: !Ref VPC
   
   RouteTableAssociation1:
-    Type: AWS::EC2::RouteTableAssociation
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref subnet1
       RouteTableId: !Ref RouteTable
       
   RouteTableAssociation2:
-     Type: AWS::EC2::RouteTableAssociation
+     Type: AWS::EC2::SubnetRouteTableAssociation
      Properties:
        SubnetId: !Ref subnet2
        RouteTableId: !Ref RouteTable
