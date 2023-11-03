@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion:
+Description: Create ECS Cluster
+Resources:
+  EcsCluster: 
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: store
+    
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: ecs-service
+      Subnets:
+        - !ImportValue subnet1
+        - !ImportValue subnet2
+      SecurityGroups:
+        !Ref LoadBalancerSecurityGroup
+        
+  LoadBalancerListener:
+   Type: AWS::ElasticLoadBalancingV2::Listener
+   Properties:
+     LoadBalancerArn: !Ref LoadBalancer
+     Protocol: HTTP
+     Port: 80
+     DefaultAction:
+       - Type: forward
+         TargetGroupAr: DefaultTargetGroup
+  
+  DefaultTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: default
+      VpcId: !ImportValue VPC
+      Protocol: HTTP
+      Port: 80
+   
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue VPC
+      SecurityGroupsIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: -1
+          
+  CloudwatchLogsGroup:
+    Type: AWS::Logs:Group
+    Properties:
+      LogGroupName: store
+      RetentionInDays: 1
+      
+  ContainerSecurityGroups:
+    Type: AWS::EC2::SecurityGroups
+    Properties:
+      VpcId: !ImportValue VPC
+      SecurityGroupsIngress:
+        - SourceSecurityGroupId:  !Ref LoadBalancerSecurityGroup
+          IpProtocol: -1
+          
+Outputs:
+  Cluster:
+    Value: !ref EcsCluster
+    Export:
+      Name: ECSCluster
+  
+  Listener:
+    Value: !Ref LoadBalancerListener
+    Export:
+      Name: LoadBalancerListener
+  
+  ContainerSecurityGroups:
+    Value: !Ref ContainerSecurityGroups
+    Export:
+      Name: ContainerSecurityGroups
+  
+  LoadBalancerDNS:
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: DNS
